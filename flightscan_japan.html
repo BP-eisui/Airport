@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FlightScan Japan — 国内線料金比較</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#0a0a0f;min-height:100vh;font-family:'Noto Sans JP',system-ui,sans-serif;color:#e8e8f0;font-size:16px}
+a{text-decoration:none;color:inherit}
+
+/* ── TOP BAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:#0e0e1aee;backdrop-filter:blur(12px);border-bottom:1px solid #1e1e35;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.topbar-icon{width:32px;height:32px;background:#4f8ef7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.topbar-sub{font-size:10px;color:#4f4f6e;letter-spacing:1px}
+
+/* ── LAYOUT ── */
+.page{max-width:480px;margin:0 auto;padding:0 0 60px}
+.section{padding:16px 14px 0}
+.label{font-size:10px;color:#4f4f6e;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:500}
+
+/* ── FORM ELEMENTS ── */
+.swap-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:10px}
+.swap-row .sel-wrap{flex:1;min-width:0}
+.sel-wrap select,
+.date-input{width:100%;background:#12121e;border:1px solid #1e1e35;border-radius:10px;color:#e8e8f0;padding:12px 14px;font-size:14px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none;transition:border-color .2s}
+.sel-wrap select:focus,.date-input:focus{border-color:#4f8ef7}
+.sel-wrap select option{background:#12121e}
+.date-input{margin-bottom:10px;display:block}
+.swap-btn{width:42px;height:42px;background:#1e1e35;border:1px solid #2a2a45;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#4f8ef7;font-size:18px;flex-shrink:0;transition:background .2s,transform .3s}
+.swap-btn:active{background:#2a2a45;transform:rotate(180deg)}
+
+/* ── CONDITION CHIPS ── */
+.conditions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.cond-chip{background:#1a1a2e;border:1px solid #2a2a45;border-radius:20px;padding:7px 13px;font-size:12px;color:#8888aa;cursor:pointer;transition:all .2s;user-select:none;display:flex;align-items:center;gap:5px}
+.cond-chip.on{background:rgba(79,142,247,.15);border-color:#4f8ef7;color:#4f8ef7}
+.cond-chip i{font-size:14px}
+
+/* ── SEARCH BUTTON ── */
+.search-btn{width:100%;background:#4f8ef7;border:none;border-radius:12px;color:#fff;padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:opacity .2s,transform .1s;margin-top:2px}
+.search-btn:active{opacity:.85;transform:scale(0.99)}
+
+/* ── SPINNER ── */
+.spinner-wrap{display:none;flex-direction:column;align-items:center;padding:56px 0;gap:14px}
+.spinner{width:30px;height:30px;border:2px solid #1e1e35;border-top-color:#4f8ef7;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-txt{font-size:13px;color:#4f4f6e}
+
+/* ── RESULTS ── */
+.results{display:none;padding:0 14px}
+.section-head{font-size:10px;color:#4f4f6e;letter-spacing:1.8px;text-transform:uppercase;margin:20px 0 10px;font-weight:500}
+
+/* ── BEST BANNER ── */
+.best-banner{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.28);border-radius:13px;padding:14px 16px;margin-bottom:4px}
+.best-al{font-size:11px;color:#4f8ef7;font-weight:500;margin-bottom:3px}
+.best-price{font-size:26px;font-weight:700;color:#4f8ef7;letter-spacing:-1.5px;line-height:1}
+.best-info{font-size:11px;color:#6b6b8a;margin-top:5px;line-height:1.5}
+
+/* ── AIRLINE TABS ── */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;background:#1a1a2e;border:1px solid #2a2a45;border-radius:20px;padding:7px 14px;font-size:12px;color:#8888aa;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
+.tab.on{background:rgba(79,142,247,.15);border-color:#4f8ef7;color:#4f8ef7;font-weight:500}
+
+/* ── FARE CARD ── */
+.fare-card{background:#12121e;border:1px solid #1e1e35;border-radius:14px;padding:14px;margin-bottom:8px}
+.fare-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.al-badge{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.route-label{font-size:11px;color:#4f4f6e;background:#0e0e1a;padding:4px 10px;border-radius:6px}
+.fare-rows{display:flex;flex-direction:column}
+.fare-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #181828}
+.fare-row:last-child{border-bottom:none;padding-bottom:0}
+.fare-row-left{flex:1;min-width:0;padding-right:10px}
+.fare-name{font-size:13px;color:#c8c8e0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fare-cond{font-size:10px;color:#4f4f6e;margin-top:2px}
+.fare-note{font-size:10px;color:#4f8ef780;margin-top:1px}
+.fare-right{text-align:right;flex-shrink:0}
+.fare-price{font-size:16px;font-weight:700;letter-spacing:-.5px}
+.fare-price.lo{color:#4fc3a1}
+.fare-price.hi{color:#8888aa}
+.fare-price.mid{color:#e8e8f0}
+.fare-discount{font-size:10px;color:#4fc3a1;margin-top:1px}
+.fare-best-tag{font-size:9px;color:#4fc3a1;margin-top:2px}
+.recommendation{margin-top:12px;background:#0e0e1a;border-radius:9px;padding:10px 12px;font-size:11px;color:#6b6b8a;line-height:1.7}
+.recommendation .highlight{color:#4f8ef7;font-weight:600}
+.shareholder-tip{color:#f7a94f}
+
+/* ── TIMING CHART ── */
+.timing-wrap{background:#12121e;border:1px solid #1e1e35;border-radius:14px;padding:14px;margin-bottom:4px}
+.timing-head{font-size:11px;color:#4f4f6e;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.chart-canvas-wrap{position:relative;width:100%;height:200px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#8888aa}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── OTA SECTION ── */
+.ota-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.ota-btn{background:#12121e;border:1px solid #1e1e35;border-radius:12px;padding:13px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:border-color .15s,background .15s}
+.ota-btn:active{border-color:#2a2a55;background:#15152a}
+.ota-name{font-size:13px;font-weight:600;color:#e8e8f0}
+.ota-desc{font-size:10px;color:#4f4f6e}
+.ota-arrow{font-size:11px;color:#4f8ef7;margin-top:3px;display:flex;align-items:center;gap:3px}
+
+/* ── OFFICIAL LINKS ── */
+.official-list{display:flex;flex-direction:column;gap:8px}
+.official-btn{background:#12121e;border:1px solid #1e1e35;border-radius:12px;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s,background .15s}
+.official-btn:active{border-color:#2a2a55;background:#15152a}
+.official-left{display:flex;align-items:center;gap:10px}
+.official-al{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.official-name{font-size:13px;font-weight:600;color:#e8e8f0}
+.official-note{font-size:10px;color:#4f4f6e;margin-top:2px}
+.official-price-col{text-align:right;flex-shrink:0}
+.official-from{font-size:10px;color:#4f4f6e}
+.official-val{font-size:15px;font-weight:700;color:#e8e8f0;letter-spacing:-.5px}
+
+/* ── NOTE ── */
+.note-box{background:#111118;border:1px solid #1a1a28;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:11px;color:#4a4a6a;line-height:1.8}
+
+/* ── SAFE AREA (iphone notch) ── */
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .page{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-icon">✈</div>
+  <div>
+    <div class="topbar-title">FlightScan Japan</div>
+    <div class="topbar-sub">国内線 料金比較</div>
+  </div>
+</div>
+
+<div class="page">
+  <!-- 検索フォーム -->
+  <div class="section">
+    <div class="label">路線</div>
+    <div class="swap-row">
+      <div class="sel-wrap">
+        <select id="fromAP">
+          <option value="HND">🛫 羽田 (HND)</option>
+          <option value="NRT">🛫 成田 (NRT)</option>
+          <option value="ITM">🛫 伊丹 (ITM)</option>
+          <option value="KIX">🛫 関空 (KIX)</option>
+          <option value="CTS">🛫 新千歳 (CTS)</option>
+          <option value="OKA">🛫 那覇 (OKA)</option>
+          <option value="FUK">🛫 福岡 (FUK)</option>
+          <option value="NGO">🛫 中部 (NGO)</option>
+          <option value="SDJ">🛫 仙台 (SDJ)</option>
+          <option value="HIJ">🛫 広島 (HIJ)</option>
+        </select>
+      </div>
+      <div class="swap-btn" id="swapBtn" title="入れ替え">⇄</div>
+      <div class="sel-wrap">
+        <select id="toAP">
+          <option value="CTS">🛬 新千歳 (CTS)</option>
+          <option value="OKA">🛬 那覇 (OKA)</option>
+          <option value="FUK">🛬 福岡 (FUK)</option>
+          <option value="HND">🛬 羽田 (HND)</option>
+          <option value="NRT">🛬 成田 (NRT)</option>
+          <option value="ITM">🛬 伊丹 (ITM)</option>
+          <option value="KIX">🛬 関空 (KIX)</option>
+          <option value="NGO">🛬 中部 (NGO)</option>
+          <option value="SDJ">🛬 仙台 (SDJ)</option>
+          <option value="HIJ">🛬 広島 (HIJ)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="label">搭乗日</div>
+    <input type="date" class="date-input" id="flightDate">
+
+    <div class="label">あなたの条件（タップして選択）</div>
+    <div class="conditions">
+      <div class="cond-chip" data-c="shareholder"><i class="ti ti-certificate"></i>株主優待券あり</div>
+      <div class="cond-chip" data-c="anacard"><i class="ti ti-credit-card"></i>ANAカード会員</div>
+      <div class="cond-chip" data-c="jalcard"><i class="ti ti-credit-card"></i>JALカード会員</div>
+      <div class="cond-chip" data-c="senior"><i class="ti ti-user"></i>65歳以上</div>
+      <div class="cond-chip" data-c="student"><i class="ti ti-school"></i>学割対象</div>
+    </div>
+
+    <button class="search-btn" id="searchBtn">料金を比較する</button>
+  </div>
+
+  <!-- ローディング -->
+  <div class="spinner-wrap" id="spinner">
+    <div class="spinner"></div>
+    <div class="spin-txt">各社料金を取得中...</div>
+  </div>
+
+  <!-- 結果エリア -->
+  <div class="results" id="results">
+
+    <div class="section-head">最安値サマリー</div>
+    <div class="best-banner">
+      <div class="best-al" id="bestLabel">—</div>
+      <div class="best-price" id="bestPrice">—</div>
+      <div class="best-info" id="bestInfo">—</div>
+    </div>
+
+    <div class="section-head">航空会社別 料金比較</div>
+    <div class="tabs" id="alTabs"></div>
+    <div id="fareCards"></div>
+
+    <div class="section-head">購入タイミングと価格推移</div>
+    <div class="timing-wrap">
+      <div class="timing-head">早く買うほどお得 — 搭乗日までの日数と価格</div>
+      <div class="chart-canvas-wrap">
+        <canvas id="timingChart" role="img" aria-label="搭乗日までの日数別、各航空会社の料金推移を示す折れ線グラフ">購入タイミング別料金チャート</canvas>
+      </div>
+      <div class="chart-legend" id="timingLegend"></div>
+    </div>
+
+    <div class="section-head">OTAサイトで一括比較</div>
+    <div class="ota-grid">
+      <a class="ota-btn" id="lnk-sky" href="#" target="_blank" rel="noopener">
+        <div class="ota-name">スカイスキャナー</div>
+        <div class="ota-desc">全社一括検索</div>
+        <div class="ota-arrow"><i class="ti ti-external-link"></i> 開く</div>
+      </a>
+      <a class="ota-btn" id="lnk-rakuten" href="#" target="_blank" rel="noopener">
+        <div class="ota-name">楽天トラベル</div>
+        <div class="ota-desc">ポイント還元あり</div>
+        <div class="ota-arrow"><i class="ti ti-external-link"></i> 開く</div>
+      </a>
+      <a class="ota-btn" id="lnk-jalan" href="#" target="_blank" rel="noopener">
+        <div class="ota-name">じゃらん</div>
+        <div class="ota-desc">国内専門OTA</div>
+        <div class="ota-arrow"><i class="ti ti-external-link"></i> 開く</div>
+      </a>
+      <a class="ota-btn" id="lnk-yahoo" href="#" target="_blank" rel="noopener">
+        <div class="ota-name">Yahoo!トラベル</div>
+        <div class="ota-desc">PayPay還元</div>
+        <div class="ota-arrow"><i class="ti ti-external-link"></i> 開く</div>
+      </a>
+    </div>
+
+    <div class="section-head" style="margin-top:18px">各社公式サイトへ直接</div>
+    <div class="official-list" id="officialLinks"></div>
+
+    <div class="note-box">
+      ※ 表示価格はサンプルデータです。実際の価格は各公式サイト・OTAでご確認ください。<br>
+      ※ 株主優待券は当日空港購入不可。事前に金券ショップ等での入手が必要です。<br>
+      ※ セイバー・早割料金は変動制のため、表示価格は目安です。<br>
+      ※ LCC（Peach・ジェットスター）は手荷物料金が別途かかる場合があります。
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const AIRPORTS = {
+  HND:'羽田',NRT:'成田',ITM:'伊丹',KIX:'関空',
+  CTS:'新千歳',OKA:'那覇',FUK:'福岡',NGO:'中部',SDJ:'仙台',HIJ:'広島'
+};
+
+const AIRLINES = {
+  ANA:{name:'ANA',full:'全日空',color:'#4f8ef7',bg:'rgba(79,142,247,.18)',text:'#4f8ef7'},
+  JAL:{name:'JAL',full:'日本航空',color:'#e85c5c',bg:'rgba(232,92,92,.18)',text:'#e85c5c'},
+  SKY:{name:'SKY',full:'スカイマーク',color:'#4fc3a1',bg:'rgba(79,195,161,.18)',text:'#4fc3a1'},
+  APJ:{name:'PCH',full:'Peach',color:'#f7a94f',bg:'rgba(247,169,79,.18)',text:'#f7a94f'},
+  JJP:{name:'JJP',full:'ジェットスター',color:'#a78bfa',bg:'rgba(167,139,250,.18)',text:'#a78bfa'}
+};
+
+const FARE_TYPES = {
+  ANA:[
+    {key:'t75',name:'旅割75',cond:'75日前購入・変更不可',disc:0.44,note:'早期最安値'},
+    {key:'p28',name:'プレミアム旅割28',cond:'28日前購入・変更不可',disc:0.48,note:'最大48%割引'},
+    {key:'t28',name:'旅割28',cond:'28日前購入・変更不可',disc:0.35,note:''},
+    {key:'t21',name:'旅割21',cond:'21日前購入',disc:0.28,note:''},
+    {key:'t7',name:'特割7',cond:'7日前購入',disc:0.15,note:''},
+    {key:'sh',name:'株主優待割引',cond:'優待券1枚使用・当日でも可',disc:0.50,special:'shareholder',note:'金券ショップで入手可'},
+    {key:'ac',name:'ANAカード割引',cond:'ANAカードで決済',disc:0.05,special:'anacard',note:'他割引と併用可'},
+    {key:'sr',name:'シニア割（65歳以上）',cond:'当日購入可・要年齢確認',disc:0.30,special:'senior',note:'空席がある場合のみ'},
+    {key:'std',name:'普通運賃',cond:'制限なし・変更・払戻自由',disc:0,note:''},
+  ],
+  JAL:[
+    {key:'ss',name:'スペシャルセイバー',cond:'75日前購入・変更不可',disc:0.50,note:'最大50%割引'},
+    {key:'sv',name:'セイバー',cond:'45日前購入・変更不可',disc:0.40,note:''},
+    {key:'s28',name:'スペシャル28',cond:'28日前購入',disc:0.30,note:''},
+    {key:'s7',name:'スペシャル7',cond:'7日前購入',disc:0.15,note:''},
+    {key:'sh',name:'株主割引',cond:'優待券1枚使用・当日でも可',disc:0.50,special:'shareholder',note:'金券ショップで入手可'},
+    {key:'jc',name:'JALカード割引',cond:'JALカードで決済',disc:0.05,special:'jalcard',note:'他割引と併用可'},
+    {key:'sr',name:'シニア割（65歳以上）',cond:'当日購入可・要年齢確認',disc:0.30,special:'senior',note:'空席がある場合のみ'},
+    {key:'std',name:'普通運賃',cond:'制限なし・変更・払戻自由',disc:0,note:''},
+  ],
+  SKY:[
+    {key:'bg',name:'バーゲン',cond:'早期販売・変更不可',disc:0.45,note:'数量限定・売切れ注意'},
+    {key:'sc',name:'スカイセール',cond:'セール期間のみ・変更不可',disc:0.55,note:'不定期開催'},
+    {key:'s21',name:'スカイ早割21',cond:'21日前購入',disc:0.30,note:''},
+    {key:'s7',name:'スカイ早割7',cond:'7日前購入',disc:0.15,note:''},
+    {key:'std',name:'スカイ直前割',cond:'7日以内・空席時のみ',disc:0.10,note:'空席状況次第'},
+  ],
+  APJ:[
+    {key:'sp',name:'スペシャル',cond:'早期販売・変更不可・手荷物別',disc:0.60,note:'最安クラス・手荷物要追加'},
+    {key:'vl',name:'バリュー',cond:'標準・変更料あり',disc:0.40,note:''},
+    {key:'st',name:'スタンダード',cond:'変更・払戻可',disc:0.20,note:''},
+    {key:'sr',name:'シニア割（65歳以上）',cond:'前日まで購入・要年齢確認',disc:0.35,special:'senior',note:''},
+    {key:'ud',name:'U割（学生）',cond:'当日購入可・学生証提示',disc:0.30,special:'student',note:''},
+  ],
+  JJP:[
+    {key:'st',name:'Starter',cond:'早期・手荷物なし・変更不可',disc:0.55,note:'機内持込のみ'},
+    {key:'sp',name:'Starter Plus',cond:'早期・手荷物込み（20kg）',disc:0.42,note:''},
+    {key:'fx',name:'Flex',cond:'変更・払戻可',disc:0.20,note:''},
+    {key:'ud',name:'学生割引',cond:'学生・空席時・学生証提示',disc:0.35,special:'student',note:''},
+  ]
+};
+
+const BASE_PRICES = {
+  'HND-CTS':38000,'HND-OKA':48000,'HND-FUK':38000,'HND-NGO':22000,
+  'HND-SDJ':18000,'HND-HIJ':38000,'NRT-CTS':36000,'NRT-OKA':46000,
+  'NRT-FUK':36000,'ITM-CTS':40000,'ITM-OKA':42000,'ITM-FUK':20000,
+  'KIX-CTS':42000,'KIX-OKA':40000,'CTS-OKA':56000,'CTS-FUK':50000,
+  'FUK-OKA':38000,'NGO-CTS':35000,'NGO-OKA':44000,'SDJ-OKA':52000
+};
+
+const TIMING_DAYS=[75,60,45,28,21,14,7,3,1,0];
+
+function getBase(from,to){
+  return BASE_PRICES[from+'-'+to]||BASE_PRICES[to+'-'+from]||36000;
+}
+
+function getTimingDiscount(al,days){
+  const map={
+    ANA:[{d:75,v:44},{d:28,v:35},{d:21,v:28},{d:14,v:20},{d:7,v:12},{d:3,v:5},{d:0,v:0}],
+    JAL:[{d:75,v:50},{d:45,v:40},{d:28,v:30},{d:21,v:22},{d:7,v:15},{d:3,v:5},{d:0,v:0}],
+    SKY:[{d:45,v:45},{d:21,v:30},{d:7,v:15},{d:3,v:8},{d:0,v:5}],
+    APJ:[{d:60,v:60},{d:30,v:45},{d:14,v:30},{d:7,v:15},{d:3,v:10},{d:0,v:8}],
+    JJP:[{d:60,v:55},{d:30,v:42},{d:14,v:28},{d:7,v:15},{d:3,v:10},{d:0,v:8}]
+  };
+  const tiers=map[al]||[];
+  for(const t of tiers){if(days>=t.d)return t.v;}
+  return 0;
+}
+
+let conditions=new Set();
+let selectedAl='ANA';
+let timingChartInst=null;
+let currentBase=38000;
+
+/* 日付初期値：30日後 */
+const initDate=new Date();
+initDate.setDate(initDate.getDate()+30);
+document.getElementById('flightDate').value=initDate.toISOString().split('T')[0];
+
+/* 条件チップ */
+document.querySelectorAll('.cond-chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    const k=c.dataset.c;
+    conditions.has(k)?(conditions.delete(k),c.classList.remove('on')):(conditions.add(k),c.classList.add('on'));
+  });
+});
+
+/* 路線入れ替え */
+document.getElementById('swapBtn').addEventListener('click',()=>{
+  const f=document.getElementById('fromAP'),t=document.getElementById('toAP');
+  const tmp=f.value;f.value=t.value;t.value=tmp;
+});
+
+/* 検索 */
+document.getElementById('searchBtn').addEventListener('click',doSearch);
+
+function doSearch(){
+  const from=document.getElementById('fromAP').value;
+  const to=document.getElementById('toAP').value;
+  if(from===to){alert('出発地と到着地が同じです。別の空港を選択してください。');return;}
+  document.getElementById('spinner').style.display='flex';
+  document.getElementById('results').style.display='none';
+  currentBase=getBase(from,to);
+  setTimeout(()=>showResults(from,to),700);
+}
+
+function daysUntilFlight(){
+  const fd=new Date(document.getElementById('flightDate').value);
+  return Math.max(0,Math.round((fd-new Date())/(86400000)));
+}
+
+function showResults(from,to){
+  document.getElementById('spinner').style.display='none';
+  const days=daysUntilFlight();
+
+  /* 最安値計算 */
+  let globalMin={price:Infinity};
+  Object.keys(AIRLINES).forEach(al=>{
+    (FARE_TYPES[al]||[]).forEach(f=>{
+      if(f.special&&!conditions.has(f.special))return;
+      const p=Math.round(currentBase*(1-f.disc)/100)*100;
+      if(p<globalMin.price)globalMin={price:p,al,fare:f};
+    });
+  });
+
+  document.getElementById('bestLabel').textContent=AIRLINES[globalMin.al].full+' — '+globalMin.fare.name;
+  document.getElementById('bestPrice').textContent='¥'+globalMin.price.toLocaleString('ja-JP');
+  document.getElementById('bestInfo').textContent=
+    globalMin.fare.cond+'　|　搭乗'+days+'日前の現在価格目安';
+
+  buildAlTabs(from,to,days);
+  renderFareCards(from,to,days);
+  buildTimingChart();
+  buildOTALinks(from,to);
+  buildOfficialLinks(from,to,days);
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildAlTabs(from,to,days){
+  const wrap=document.getElementById('alTabs');
+  wrap.innerHTML='';
+  Object.keys(AIRLINES).forEach((al,i)=>{
+    const t=document.createElement('button');
+    t.className='tab'+(i===0?' on':'');
+    t.textContent=AIRLINES[al].full;
+    t.dataset.al=al;
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');
+      selectedAl=al;
+      renderFareCards(from,to,days);
+    });
+    wrap.appendChild(t);
+  });
+  selectedAl='ANA';
+}
+
+function renderFareCards(from,to,days){
+  const wrap=document.getElementById('fareCards');
+  wrap.innerHTML='';
+  const al=selectedAl;
+  const info=AIRLINES[al];
+  const fares=(FARE_TYPES[al]||[]).filter(f=>!f.special||conditions.has(f.special));
+
+  const prices=fares.map(f=>Math.round(currentBase*(1-f.disc)/100)*100);
+  const minP=Math.min(...prices);
+
+  const card=document.createElement('div');
+  card.className='fare-card';
+
+  let html=`<div class="fare-header">
+    <div class="al-badge" style="background:${info.bg};color:${info.text}">${info.name}</div>
+    <div class="route-label">${AIRPORTS[from]} → ${AIRPORTS[to]}</div>
+  </div><div class="fare-rows">`;
+
+  fares.forEach((f,i)=>{
+    const p=prices[i];
+    const disc=Math.round(f.disc*100);
+    const isBest=p===minP;
+    const priceClass=f.disc>=0.35?'lo':f.disc===0?'hi':'mid';
+    html+=`<div class="fare-row">
+      <div class="fare-row-left">
+        <div class="fare-name">${f.name}</div>
+        <div class="fare-cond">${f.cond}</div>
+        ${f.note?`<div class="fare-note">${f.note}</div>`:''}
+      </div>
+      <div class="fare-right">
+        <div class="fare-price ${priceClass}">¥${p.toLocaleString('ja-JP')}</div>
+        ${disc>0?`<div class="fare-discount">▼${disc}% OFF</div>`:''}
+        ${isBest&&fares.length>1?`<div class="fare-best-tag">★ 最安</div>`:''}
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  /* おすすめコメント */
+  const bestFare=fares[prices.indexOf(minP)];
+  let tipHtml=`<span class="highlight">現在（搭乗${days}日前）のおすすめ：</span>${bestFare.name} — ¥${minP.toLocaleString('ja-JP')}`;
+  if(conditions.has('shareholder')&&fares.some(f=>f.special==='shareholder')){
+    tipHtml+=`<br><span class="shareholder-tip">✓ 株主優待券あり → 当日でも最大50%割引が適用可能です</span>`;
+  }
+  if(days===0){
+    tipHtml+=`<br>当日購入の場合、株主優待・シニア割・学割が利用できる場合があります。`;
+  }
+  html+=`<div class="recommendation">${tipHtml}</div>`;
+
+  card.innerHTML=html;
+  wrap.appendChild(card);
+}
+
+function buildTimingChart(){
+  const ctx=document.getElementById('timingChart').getContext('2d');
+  if(timingChartInst)timingChartInst.destroy();
+  const labels=TIMING_DAYS.map(d=>d===0?'当日':d+'日前');
+  const alKeys=Object.keys(AIRLINES);
+  const colors=['#4f8ef7','#e85c5c','#4fc3a1','#f7a94f','#a78bfa'];
+  const dashes=[[],[4,3],[2,2],[6,3],[3,3]];
+  const datasets=alKeys.map((al,i)=>({
+    label:AIRLINES[al].full,
+    data:TIMING_DAYS.map(d=>Math.round(currentBase*(1-getTimingDiscount(al,d)/100)/100)*100),
+    borderColor:colors[i],
+    backgroundColor:colors[i]+'14',
+    tension:0.3,
+    pointRadius:3,
+    borderWidth:1.5,
+    borderDash:dashes[i]
+  }));
+
+  timingChartInst=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1e1e35',borderColor:'#2a2a45',borderWidth:1,
+          titleColor:'#e8e8f0',bodyColor:'#8888aa',
+          callbacks:{label:c=>c.dataset.label+': ¥'+c.raw.toLocaleString('ja-JP')}
+        }
+      },
+      scales:{
+        x:{grid:{color:'#1a1a28'},ticks:{color:'#6b6b8a',font:{size:9},maxRotation:45},border:{color:'#1e1e35'}},
+        y:{grid:{color:'#1a1a28'},ticks:{color:'#6b6b8a',font:{size:9},callback:v=>'¥'+(v/1000).toFixed(0)+'k'},border:{color:'#1e1e35'}}
+      }
+    }
+  });
+
+  const leg=document.getElementById('timingLegend');
+  leg.innerHTML='';
+  alKeys.forEach((al,i)=>{
+    leg.innerHTML+=`<div class="leg-item"><div class="leg-dot" style="background:${colors[i]}"></div>${AIRLINES[al].full}</div>`;
+  });
+}
+
+function buildOTALinks(from,to){
+  const fd=document.getElementById('flightDate').value;
+  const [y,m,d]=fd.split('-');
+  const fd8=y+m+d;
+  document.getElementById('lnk-sky').href=
+    `https://www.skyscanner.jp/transport/flights/${from.toLowerCase()}/${to.toLowerCase()}/${y.slice(2)}${m}${d}/`;
+  document.getElementById('lnk-rakuten').href=
+    `https://travel.rakuten.co.jp/air/search/?dpt=${from}&arv=${to}&dptDate=${y}-${m}-${d}`;
+  document.getElementById('lnk-jalan').href=
+    `https://www.jalan.net/domtour/airline/?depAirportCd=${from}&arvAirportCd=${to}&date=${fd8}`;
+  document.getElementById('lnk-yahoo').href=
+    `https://travel.yahoo.co.jp/domtour/airline/search/?from=${from}&to=${to}&date=${fd8}`;
+}
+
+function buildOfficialLinks(from,to,days){
+  const wrap=document.getElementById('officialLinks');
+  wrap.innerHTML='';
+  const officials=[
+    {al:'ANA',url:'https://www.ana.co.jp/ja/jp/domtop/',
+      note:days>=75?'旅割75が利用可':days>=28?'旅割28が利用可':days>=7?'特割が利用可':'直前割・株主割を確認'},
+    {al:'JAL',url:'https://www.jal.co.jp/jp/ja/domtop/',
+      note:days>=75?'スペシャルセイバー対象':days>=45?'セイバー対象':days>=7?'スペシャル7対象':'直前割・株主割を確認'},
+    {al:'SKY',url:'https://www.skymark.co.jp/ja/',
+      note:days>=45?'バーゲン・セール料金を確認':'スカイ早割を確認'},
+    {al:'APJ',url:'https://www.flypeach.com/flight',
+      note:days>=60?'スペシャル料金を確認':'バリュー料金を確認'},
+    {al:'JJP',url:'https://www.jetstar.com/jp/ja/home',
+      note:days>=60?'Starter料金を確認':'Starter Plus料金を確認'},
+  ];
+  officials.forEach(o=>{
+    const info=AIRLINES[o.al];
+    const avail=(FARE_TYPES[o.al]||[]).filter(f=>!f.special||conditions.has(f.special));
+    const minP=Math.min(...avail.map(f=>Math.round(currentBase*(1-f.disc)/100)*100));
+    wrap.innerHTML+=`<a class="official-btn" href="${o.url}" target="_blank" rel="noopener">
+      <div class="official-left">
+        <div class="official-al" style="background:${info.bg};color:${info.text}">${info.name}</div>
+        <div>
+          <div class="official-name">${info.full}公式</div>
+          <div class="official-note">${o.note}</div>
+        </div>
+      </div>
+      <div class="official-price-col">
+        <div class="official-from">最安目安</div>
+        <div class="official-val">¥${minP.toLocaleString('ja-JP')}</div>
+      </div>
+    </a>`;
+  });
+}
+
+/* 初回自動検索 */
+doSearch();
+</script>
+</body>
+</html>
